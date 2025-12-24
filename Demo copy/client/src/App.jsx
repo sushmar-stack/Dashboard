@@ -23,6 +23,7 @@ const ProjectListIcon = ({ className }) => (
 );
 const ChartLineUp = ({ className }) => <span className={className}>📈</span>;
 const Eye = ({ className }) => <span className={className}>👁️</span>;
+const EyeSlash = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.243 4.243L6.228 6.228" /></svg>;
 // -----------------------------------------------------------------------------
 
 // --- Skeleton Component ---
@@ -1383,7 +1384,7 @@ function Header({
       <div className="flex items-center gap-4">
         <img src="/sycamore-logo.png" alt="Sycamore Informatics Logo" className="h-10 sm:h-12 mr-2 sm:mr-3" />
         <h1 className="text-3xl lg:text-4xl font-extrabold drop-shadow-lg whitespace-nowrap">
-          Sycamore Informatics Customer Dashboard
+          Sycamore Customer Dashboard
         </h1>
       </div>
 
@@ -1458,6 +1459,77 @@ function Header({
   );
 }
 
+// --- NEW: LoginPage Component ---
+function LoginPage({ onLogin }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    // Hardcoded credentials for demonstration purposes.
+    if (username === 'admin' && password === 'password@24') {
+      onLogin();
+    } else {
+      setError('Invalid username or password');
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+      <div className="p-8 bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm m-4">
+        <img src="/sycamore-logo.png" alt="Sycamore Informatics Logo" className="h-12 mx-auto mb-6" />
+        <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-6">Sycamore Customer Dashboard Login</h2>
+        <form onSubmit={handleLogin}>
+          <div className="mb-4">
+            <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="username">
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="password">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 dark:text-gray-400"
+              >
+                {showPassword ? <EyeSlash className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
+          {error && <p className="text-red-500 text-center text-sm mb-4">{error}</p>}
+          <button
+            type="submit"
+            className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
+          >
+            Login
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState("");
@@ -1470,6 +1542,7 @@ export default function App() {
   const [isEditing, setIsEditing] = useState(false);
 
   const [editingFields, setEditingFields] = useState({});
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [masterData, setMasterData] = useState({});
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [isClientListExpanded, setIsClientListExpanded] = useState(true);
@@ -2438,53 +2511,72 @@ const handleSaveClientSpecificData = async () => {
   const customersToRender = isGlobalSearch ? Object.keys(displayData) : (selectedCustomer && displayData[selectedCustomer] ? [selectedCustomer] : []);
   const weeklyUpdatesData = data._weeklyUpdates && data._weeklyUpdates[selectedWeek];
 
+  if (!isAuthenticated) {
+    return (
+      <div className={`${theme === 'light' ? 'light' : 'dark'}`}>
+        <LoginPage onLogin={() => setIsAuthenticated(true)} />
+      </div>
+    );
+  }
+
 
   return (
     // Updated primary text color for better contrast
     <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-gray-900' : 'bg-gray-900 text-gray-100'} transition-colors duration-300`}>
 
-      <Header
-        theme={theme}
-        setTheme={setTheme}
-        selectedWeek={selectedWeek}
-        handleWeekChange={handleWeekChange}
-        availableWeeks={availableWeeks}
-        isLoading={isLoading}
-        isEditing={isEditing}
-        startEdit={startEdit}
-        saveAllChanges={saveAllChanges}
-        setIsEditing={setIsEditing}
-        onAddClientClick={() => setIsAddClientModalVisible(true)} // Use new handler
-        query={query}
-        setQuery={setQuery}
-        searchContainerRef={searchContainerRef}
-        selectedCustomer={selectedCustomer}
-        isWeeklyUpdateVisible={isWeeklyUpdateVisible}
-        setIsWeeklyUpdateVisible={setIsWeeklyUpdateVisible}
-        showHiddenClients={showHiddenClients}
-        setShowHiddenClients={setShowHiddenClients}
-      />
+    {/* --- NEW: Sticky Header Container --- */}
+    {/* This wrapper keeps the Header and CustomerList fixed at the top */}
+    <div className={`sticky top-0 z-50 shadow-md ${theme === 'light' ? 'bg-white' : 'bg-gray-900'} transition-colors duration-300`}>
+      
+      <Header
+        theme={theme}
+        setTheme={setTheme}
+        selectedWeek={selectedWeek}
+        handleWeekChange={handleWeekChange}
+        availableWeeks={availableWeeks}
+        isLoading={isLoading}
+        isEditing={isEditing}
+        startEdit={startEdit}
+        saveAllChanges={saveAllChanges}
+        setIsEditing={setIsEditing}
+        onAddClientClick={() => setIsAddClientModalVisible(true)}
+        query={query}
+        setQuery={setQuery}
+        searchContainerRef={searchContainerRef}
+        selectedCustomer={selectedCustomer}
+        isWeeklyUpdateVisible={isWeeklyUpdateVisible}
+        setIsWeeklyUpdateVisible={setIsWeeklyUpdateVisible}
+        showHiddenClients={showHiddenClients}
+        setShowHiddenClients={setShowHiddenClients}
+      />
 
-      <div className="p-4">
-      <CustomerList
-        customers={showHiddenClients ? customers : customers.filter(c => !hiddenClients.has(c))}
-        selectedCustomer={selectedCustomer}
-        isClientListExpanded={isClientListExpanded}
-        onCustomerSelect={(cust) => { setQuery(""); setSelectedCustomer(cust); setIsClientListExpanded(false); }}
-        onExpand={() => setIsClientListExpanded(true)}
-        onHover={handleMouseEnter}
-        onLeave={handleMouseLeave}
-        setEditingClient={setEditingClient}
-        customerListRef={customerListRef}
-        showScrollButtons={showScrollButtons}
-        scrollLeft={scrollLeft}
-        scrollRight={scrollRight}
-        clientCustomizations={clientCustomizations}
-        setSelectedCustomer={setSelectedCustomer}
-        handleOpenTracker={handleOpenTracker}
-        handleOpenPLModal={handleOpenPLModal}
-      />
+      {/* CustomerList moved inside the sticky container */}
+      <div className="px-4 pt-2">
+        <CustomerList
+          customers={showHiddenClients ? customers : customers.filter(c => !hiddenClients.has(c))}
+          selectedCustomer={selectedCustomer}
+          isClientListExpanded={isClientListExpanded}
+          onCustomerSelect={(cust) => { setQuery(""); setSelectedCustomer(cust); setIsClientListExpanded(false); }}
+          onExpand={() => setIsClientListExpanded(true)}
+          onHover={handleMouseEnter}
+          onLeave={handleMouseLeave}
+          setEditingClient={setEditingClient}
+          customerListRef={customerListRef}
+          showScrollButtons={showScrollButtons}
+          scrollLeft={scrollLeft}
+          scrollRight={scrollRight}
+          clientCustomizations={clientCustomizations}
+          setSelectedCustomer={setSelectedCustomer}
+          handleOpenTracker={handleOpenTracker}
+          handleOpenPLModal={handleOpenPLModal}
+        />
+      </div>
+    </div>
+    {/* --- End of Sticky Header Container --- */}
 
+    {/* Main Scrollable Content Area */}
+    <div className="p-4 pt-2"> 
+      
         <div className="mt-4 mb-4 flex flex-col items-center">
         {isWeeklyUpdateVisible && (
             <div className="w-full p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 text-black">
@@ -2508,7 +2600,7 @@ const handleSaveClientSpecificData = async () => {
         {hoveredCustomer && (
           <div
             className="absolute z-50 p-3 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-300 dark:border-gray-600 flex flex-col gap-1 text-black dark:text-gray-200"
-            style={{ left: hoverPosition.x + 15, top: hoverPosition.y + 15 }}
+          style={{ left: hoverPosition.x + 15, top: hoverPosition.y + 15 }}
           >
             <div className="text-xs text-black dark:text-gray-400 mb-1">
               {availableWeeks.find(w => w.value === selectedWeek)?.label || selectedWeek}
